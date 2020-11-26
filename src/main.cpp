@@ -429,10 +429,7 @@ bool fixPiece(){
       if(piece[x][y] == 1){
         //On la definie comme la case du plateau
         plateau[piecePosX+x][piecePosY+y].color = pieceCouleur;
-        std::cout << piecePosX << " " << x << std::endl;
-        std::cout << piecePosY << " " << y << std::endl;
-        std::cout << plateau[1][0].color << std::endl;
-        std::cout << std::endl;
+
       }
     }
   }
@@ -508,6 +505,35 @@ int main(){
 
 
       /*CHECK SI LIGNE COMPLETE*/
+      //Pour chaque ligne du plateau en partant du haut
+      for(int y=0;y<hauteur;y++){
+        //Nombre de case pleine dans la ligne
+        int nbCasePleine = 0;
+        for(int x=0;x<largeur;x++){
+          //Si la case est pleine
+          if(plateau[x][y].color != 0){
+            //On ajoute 1 au nombre de case pleine dans la ligne
+            nbCasePleine++;
+          }
+        }
+        //Si la ligne est pleine
+        if(nbCasePleine == largeur){
+          //On efface la ligne
+          for(int x=0;x<largeur;x++){
+            //On efface la case
+            plateau[x][y].color = 0;
+          }
+          //On baisse toute les case au dessus
+          //Pour chaque ligne en partant de la ligne juste au dessus de la ligne actuel et on se deplace vers le haut
+          for(int tempY=y-1;tempY>0;tempY--){
+            //Pour chaque case de la ligne
+            for(int x=0;x<largeur;x++){
+              //On baisse la case du plateau de 1 case vers le bas
+              plateau[x][tempY+1].color = plateau[x][tempY].color;
+            }
+          }
+        }
+      }
       /*#######################*/
 
 
