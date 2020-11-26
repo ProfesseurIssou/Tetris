@@ -413,3 +413,8 @@
 	<SFML/Graphics/Drawable.hpp>
 	<SFML/Window/GlResource.hpp>
 
+1606410523 source:d:\projet\cppgame\tetris\src\main.cpp
+	<iostream>
+	<cstdlib>
+	<SFML/Graphics.hpp>
+

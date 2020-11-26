@@ -1,4 +1,3 @@
-//GameOver
 //Point
 //Nettoyage du code
 //MultiJoueur
@@ -80,7 +79,7 @@ bool checkSuperposition(int futurePosX, int futurePosY){
       //Si la case de la piece est utilisé
       if(piece[x][y] == 1){
         //On verifie si sa future position au niveau du plateau est utilisé
-        if(plateau[piecePosX+x+futurePosX][piecePosY+y+futurePosY].color != 0){
+        if(plateau[x+futurePosX][y+futurePosY].color != 0){
           return 1;//Superpose une case
         }
       }
@@ -452,6 +451,10 @@ int main(){
   RenderWindow gameWindow(VideoMode(320, 480), "Tetris");
 
   /*CREATION DES TEXTURES*/
+  //On cree la texture du fond
+  Texture backgroundTexture;
+  //On charge la texture du fond
+  backgroundTexture.loadFromFile("img/Board.png");
   //On cree la texture des cases des block
   Texture tileTexture;
   //On charge la texture des cases des block
@@ -459,6 +462,8 @@ int main(){
   /*#####################*/
 
   /*CREATION DES SPRITES*/
+  //On cree le sprite du fond
+  Sprite fondSprite(backgroundTexture);
   //On cree le sprite de la case du block
   Sprite tileSprite(tileTexture);
   /*#####################*/
@@ -561,7 +566,11 @@ int main(){
         //on fixe la piece
         fixPiece();
         //On genere une nouvelle piece
-        pieceGenerateur();
+        bool isCreated = pieceGenerateur();
+        //Si la piece n'a pas pus etre generer
+        if(isCreated == false){
+          gameWindow.close();
+        }
       }
       /*####################*/
     }
@@ -570,6 +579,9 @@ int main(){
     //On efface l'ecran et on le remplis de blanc
     //gameWindow.clear(Color::White);
     gameWindow.clear(Color::Black);
+
+    //Affichage du fond
+    gameWindow.draw(fondSprite);
 
     //Affichage du plateau
     for(int x=0;x<largeur;x++){
