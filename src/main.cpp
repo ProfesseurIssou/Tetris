@@ -1,5 +1,3 @@
-//Nettoyage des ligne
-//Dash
 //GameOver
 //Point
 //Nettoyage du code
@@ -436,6 +434,19 @@ bool fixPiece(){
   return 1;//La piece a bien été fixé
 }
 
+/*DASH*/
+bool dashPiece(){
+  //tant que la piece peu descendre
+  while(checkDescentePiece()){
+    piecePosY++;
+  }
+  //Sinon la piece est déposé
+  //on fixe la piece
+  fixPiece();
+  //On genere une nouvelle piece
+  pieceGenerateur();
+}
+
 int main(){
   // Creation de la fenetre de jeux
   RenderWindow gameWindow(VideoMode(320, 480), "Tetris");
@@ -472,14 +483,14 @@ int main(){
         //On ferme la fenetre
         gameWindow.close();
       }
-      //Si une touche du clavier est presser
+      //Si une touche du clavier
       if(e.type == Event::KeyPressed){
-        //Si la touche UP est presser
+        //Si la touche UP
         if(e.key.code == Keyboard::Up){
           //On verifie si on peu tourner la piece et si oui on tourne la piece
           rotation();
         }
-        //Si la touche GAUCHE est presser
+        //Si la touche GAUCHE
         if(e.key.code == Keyboard::Left){
           //On check si on peu deplacer la piece vers la gauche
           if(checkLateralMovement(-1)){
@@ -487,13 +498,18 @@ int main(){
             piecePosX--;
           }
         }
-        //Si la touche DROITE est presser
+        //Si la touche DROITE
         if(e.key.code == Keyboard::Right){
           //On check si on peu deplacer la piece vers la droite
           if(checkLateralMovement(1)){
             //On deplace toute les case qui bouge vers la droite
             piecePosX++;
           }
+        }
+        //Si la touche DOWN
+        if(e.key.code == Keyboard::Down){
+          //On dash la piece
+          dashPiece();
         }
       }
     }
