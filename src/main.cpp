@@ -1,60 +1,11 @@
 //Point
-//Nettoyage du code
 //MultiJoueur
 
 #include <iostream> //CIN COUT ENDL
 
 #include <cstdlib> //Pour random
+#include <string> //Pour les string
 #include <SFML/Graphics.hpp>
-
-using namespace sf;
-
-//case = 18x18
-
-//Definition de la taille du plateau
-const int hauteur = 20;
-const int largeur = 10;
-
-//Generation du plateau avec que des 0 en couleur
-struct{
-  int color = 0;  //0 = pas de case, et apres c'est la couleur de la case
-}plateau[largeur][hauteur];
-
-//Generation de la piece avec que des 0
-bool piece[4][4] = {0};//Une table de 4*4 remplis de 0
-//On definie la position du cadre de la piece a 0x0 par rapport au plateau
-int piecePosX = 0;
-int piecePosY = 0;
-//La couleur de la piece qui tombe
-int pieceCouleur = 0;
-/*
-0 = vide
-1 = bleu
-2 = violet
-3 = rouge
-4 = vert
-5 = jaune
-6 = bleu clair
-7 = orange
-8 = bleu
-*/
-//Le type de la piece qui tombe
-int typePiece;
-/*
-1 = I
-2 = J
-3 = L
-4 = O
-5 = S
-6 = T
-7 = Z
-*/
-//Sens de la piece [1;4]
-int pieceSens = 1;
-
-//On créé le timer du jeux pour fair descendre les piece
-Clock gameTimer;
-float delay = 0.5;//temp (en seconde) entre chaque update du jeux (descente de piece)
 
 int random(int min, int max){ //range : [min, max]
    static bool first = true;
@@ -66,562 +17,516 @@ int random(int min, int max){ //range : [min, max]
    return min + rand() % (( max + 1 ) - min);
 }
 
-/*On verifie si la piece peu etre a l'endroit demander*/
-bool checkSuperposition(int futurePosX, int futurePosY){
-  /*
-  0 = ne superpose aucune case du plateau
-  1 = superpose une case du plateau
-  */
-
-  //Pour chaque case de la piece
-  for(int x=0;x<4;x++){
-    for(int y=0;y<4;y++){
-      //Si la case de la piece est utilisé
-      if(piece[x][y] == 1){
-        //On verifie si sa future position au niveau du plateau est utilisé
-        if(plateau[x+futurePosX][y+futurePosY].color != 0){
-          return 1;//Superpose une case
-        }
-      }
-    }
-  }
-  return 0;//Ne superpose aucune case du plateau
-}
-
-/*GENERATION DE LA PIECE*/
-bool pieceGenerateur(){
-  //Retourne 1 si la piece est posé
-  //Retourne 0 si la piece est bloquer
-
-  //On met le sens de la piece a 1
-  pieceSens = 1;
-  //On genere la couleur
-  pieceCouleur = random(1,8);
-  //On genere le type de piece
-  typePiece = random(1,7);
-  /*
-  1 = I
-  2 = J
-  3 = L
-  4 = O
-  5 = S
-  6 = T
-  7 = Z
-  */
-
-  //On definie la position du cadre de la piece a la moitier de l'ecran et 0
-  piecePosX = largeur/2;
-  piecePosY = 0;
-
-  //On reinitialise la piece
-  for(int x=0;x<4;x++){
-    for(int y=0;y<4;y++){
-      piece[x][y] = 0;
-    }
-  }
-
-  //Generer la piece
-  switch(typePiece){
-    case 1://I
-      piece[0][1] = 1;
-      piece[1][1] = 1;
-      piece[2][1] = 1;
-      piece[3][1] = 1;
-      break;
-    case 2://J
-      piece[1][1] = 1;
-      piece[2][1] = 1;
-      piece[3][1] = 1;
-      piece[3][2] = 1;
-      break;
-    case 3://L
-      piece[1][1] = 1;
-      piece[2][1] = 1;
-      piece[3][1] = 1;
-      piece[1][2] = 1;
-      break;
-    case 4://O
-      piece[1][1] = 1;
-      piece[2][1] = 1;
-      piece[1][2] = 1;
-      piece[2][2] = 1;
-      break;
-    case 5://S
-      piece[2][1] = 1;
-      piece[3][1] = 1;
-      piece[1][2] = 1;
-      piece[2][2] = 1;
-      break;
-    case 6://T
-      piece[1][1] = 1;
-      piece[2][1] = 1;
-      piece[3][1] = 1;
-      piece[2][2] = 1;
-      break;
-    case 7://Z
-      piece[1][1] = 1;
-      piece[2][1] = 1;
-      piece[2][2] = 1;
-      piece[3][2] = 1;
-      break;
-  }
-
-  //verifier si elle ne superpose pas une autre piece (on inverse pour retourner vrai si la piece c'est bien créé)
-  return !checkSuperposition(piecePosX, piecePosY);
-}
-
-/*On regarde si on peu deplacer dans la direction demander*/
-bool checkLateralMovement(int direction){
-  //Pour chaque case du plateau
-  for(int x=0;x<4;x++){
-    for(int y=0;y<4;y++){
-      //Si la case de la piece est pleine
-      if(piece[x][y] == 1){
-        //On regarde si la case du plateau est utilisé ou qu'il sort du plateau
-        if(plateau[piecePosX+x+direction][piecePosY+y].color != 0 || piecePosX+x+direction<0 || piecePosX+x+direction>=largeur){
-          return 0;//On ne peu pas faire le mouvement demander
-        }
-      }
-    }
-  }
-  return 1;//Le mouvement peu etre effectuer
-}
-
-/*On regarde si on peu effectuer la rotation, si oui on la fait*/
-bool rotation(){
-  /*
-  0 = a pus etre posé
-  1 = n'a pas pus etre posé
-  */
-  //on cree la liste de la future piece
-  bool futurePiece[4][4] = {0};
-  //On genere la future piece
-  switch(typePiece){
-    case 1://I
-      //On change la position
-      pieceSens++;
-      if(pieceSens > 2){
-        pieceSens = 1;
-      }
-      //Pour chaque position
-      switch(pieceSens){
-        case 1:
-          futurePiece[0][1] = 1;
-          futurePiece[1][1] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[3][1] = 1;
+class Board{  //Plateau de la partie (Gestion du plateau et de la piece)
+  private:
+    /*VARIABLES*/
+    /*FUNCTIONS*/
+    bool setPiece(){  //On definie les case de la piece selon sont type et sont sens
+      /*
+        Vrai = La piece a bien été généré
+        False = La piece n'a pas été généré
+      */
+      //[y][x]
+      bool prmFuturePiece[4][4] = {0}; //On génére une nouvelle piece temporaire
+      switch(piece.type){  //Pour chaque type de piece
+        case 1://I
+          switch(piece.sens){ //Pour chaque sens de la piece
+            case 1:
+              prmFuturePiece[1][0] = 1;
+              prmFuturePiece[1][1] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[1][3] = 1;
+              break;
+            case 2:
+              prmFuturePiece[0][2] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[2][2] = 1;
+              prmFuturePiece[3][2] = 1;
+              break;
+          }
           break;
-        case 2:
-          futurePiece[2][0] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[2][2] = 1;
-          futurePiece[2][3] = 1;
+        case 2://J
+          switch(piece.sens){ //Pour chaque sens de la piece
+            case 1:
+              prmFuturePiece[1][1] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[1][3] = 1;
+              prmFuturePiece[2][3] = 1;
+              break;
+            case 2:
+              prmFuturePiece[0][2] = 1;
+              prmFuturePiece[0][3] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[2][2] = 1;
+              break;
+            case 3:
+              prmFuturePiece[0][1] = 1;
+              prmFuturePiece[1][1] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[1][3] = 1;
+              break;
+            case 4:
+              prmFuturePiece[0][2] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[2][2] = 1;
+              prmFuturePiece[2][1] = 1;
+              break;
+          }
           break;
-      }
-      break;
-    case 2://J
-      //On change la position
-      pieceSens++;
-      if(pieceSens > 4){
-        pieceSens = 1;
-      }
-      //Pour chaque position
-      switch(pieceSens){
-        case 1:
-          futurePiece[1][1] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[3][1] = 1;
-          futurePiece[3][2] = 1;
+        case 3://L
+          switch(piece.sens){ //Pour chaque sens de la piece
+            case 1:
+              prmFuturePiece[1][1] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[1][3] = 1;
+              prmFuturePiece[2][1] = 1;
+              break;
+            case 2:
+              prmFuturePiece[0][2] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[2][2] = 1;
+              prmFuturePiece[2][3] = 1;
+              break;
+            case 3:
+              prmFuturePiece[0][3] = 1;
+              prmFuturePiece[1][1] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[1][3] = 1;
+              break;
+            case 4:
+              prmFuturePiece[0][1] = 1;
+              prmFuturePiece[0][2] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[2][2] = 1;
+              break;
+          }
           break;
-        case 2:
-          futurePiece[2][0] = 1;
-          futurePiece[3][0] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[2][2] = 1;
+        case 4://O  Ne tourne pas
+          prmFuturePiece[1][1] = 1;
+          prmFuturePiece[1][2] = 1;
+          prmFuturePiece[2][1] = 1;
+          prmFuturePiece[2][2] = 1;
           break;
-        case 3:
-          futurePiece[1][0] = 1;
-          futurePiece[1][1] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[3][1] = 1;
+        case 5://S
+          switch(piece.sens){ //Pour chaque sens de la piece
+            case 1:
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[1][3] = 1;
+              prmFuturePiece[2][1] = 1;
+              prmFuturePiece[2][2] = 1;
+              break;
+            case 2:
+              prmFuturePiece[0][1] = 1;
+              prmFuturePiece[1][1] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[2][2] = 1;
+              break;
+          }
           break;
-        case 4:
-          futurePiece[2][0] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[2][2] = 1;
-          futurePiece[1][2] = 1;
+        case 6://T
+          switch(piece.sens){ //Pour chaque sens de la piece
+            case 1:
+              prmFuturePiece[1][1] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[1][3] = 1;
+              prmFuturePiece[2][2] = 1;
+              break;
+            case 2:
+              prmFuturePiece[0][2] = 1;
+              prmFuturePiece[1][1] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[2][2] = 1;
+              break;
+            case 3:
+              prmFuturePiece[0][2] = 1;
+              prmFuturePiece[1][1] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[1][3] = 1;
+              break;
+            case 4:
+              prmFuturePiece[0][2] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[1][3] = 1;
+              prmFuturePiece[2][2] = 1;
+              break;
+          }
+          break;
+        case 7://Z
+          switch(piece.sens){ //Pour chaque sens de la piece
+            case 1:
+              prmFuturePiece[1][1] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[2][2] = 1;
+              prmFuturePiece[2][3] = 1;
+              break;
+            case 2:
+              prmFuturePiece[0][3] = 1;
+              prmFuturePiece[1][2] = 1;
+              prmFuturePiece[1][3] = 1;
+              prmFuturePiece[2][2] = 1;
+              break;
+          }
           break;
       }
-      break;
-    case 3://L
-      //On change la position
-      pieceSens++;
-      if(pieceSens > 4){
-        pieceSens = 1;
-      }
-      //Pour chaque position
-      switch(pieceSens){
-        case 1:
-          futurePiece[1][1] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[3][1] = 1;
-          futurePiece[1][2] = 1;
-          break;
-        case 2:
-          futurePiece[2][0] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[2][2] = 1;
-          futurePiece[3][2] = 1;
-          break;
-        case 3:
-          futurePiece[3][0] = 1;
-          futurePiece[1][1] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[3][1] = 1;
-          break;
-        case 4:
-          futurePiece[1][0] = 1;
-          futurePiece[2][0] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[2][2] = 1;
-          break;
-      }
-      break;
-    case 4://O
-      return 0;//on ne peu pas tourné la piece
-      break;
-    case 5://S
-      //On change la position
-      pieceSens++;
-      if(pieceSens > 2){
-        pieceSens = 1;
-      }
-      //Pour chaque position
-      switch(pieceSens){
-        case 1:
-          futurePiece[2][1] = 1;
-          futurePiece[3][1] = 1;
-          futurePiece[1][2] = 1;
-          futurePiece[2][2] = 1;
-          break;
-        case 2:
-          futurePiece[1][0] = 1;
-          futurePiece[1][1] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[2][2] = 1;
-          break;
-      }
-      break;
-    case 6://T
-      //On change la position
-      pieceSens++;
-      if(pieceSens > 4){
-        pieceSens = 1;
-      }
-      //Pour chaque position
-      switch(pieceSens){
-        case 1:
-          futurePiece[1][1] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[3][1] = 1;
-          futurePiece[2][2] = 1;
-          break;
-        case 2:
-          futurePiece[2][0] = 1;
-          futurePiece[1][1] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[2][2] = 1;
-          break;
-        case 3:
-          futurePiece[2][0] = 1;
-          futurePiece[1][1] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[3][1] = 1;
-          break;
-        case 4:
-          futurePiece[2][0] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[3][1] = 1;
-          futurePiece[2][2] = 1;
-          break;
-      }
-      break;
-    case 7://Z
-      //On change la position
-      pieceSens++;
-      if(pieceSens > 2){
-        pieceSens = 1;
-      }
-      //Pour chaque position
-      switch(pieceSens){
-        case 1:
-          futurePiece[1][1] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[2][2] = 1;
-          futurePiece[3][2] = 1;
-          break;
-        case 2:
-          futurePiece[3][0] = 1;
-          futurePiece[2][1] = 1;
-          futurePiece[3][1] = 1;
-          futurePiece[2][2] = 1;
-          break;
-      }
-      break;
-  }
-  //On check si la piece se superpose a d'autre bloc ou qu'il touche le bord de la fenetre
-  //Pour chaque case de la future piece
-  for(int x=0;x<4;x++){
-    for(int y=0;y<4;y++){
-      //Si la case de la future piece est utilisé
-      if(futurePiece[x][y] == 1){
-        //On verifie si sa position au niveau du plateau est utilisé et que la case ne sort pas du plateau
-        if(plateau[piecePosX+x][piecePosY+y].color != 0 || piecePosX+x<0 || piecePosX+x>largeur){
-          return 0;//impossible de tourner la piece
-        }
-      }
-    }
-  }
-  //On applique la rotation
-  for(int x=0;x<4;x++){
-    for(int y=0;y<4;y++){
-      piece[x][y] = futurePiece[x][y];
-    }
-  }
-  return 1;//La rotation c'est bien effectuer
-}
-
-/*On regarde si la piece peu descendre*/
-bool checkDescentePiece(){
-  /*
-  0 = La piece ne peu pas descendre
-  1 = La piece peu descendre
-  */
-  //Pour chaque case de la piece
-  for(int x=0;x<4;x++){
-    for(int y=0;y<4;y++){
-      //On regarde si la case de la piece est utilisé
-      if(piece[x][y] == 1){
-        //On regarde si il y a une case en dessous de la case actuel ou que c'est le bas du plateau
-        if(plateau[piecePosX+x][piecePosY+y+1].color != 0 || piecePosY+y == hauteur-1){
-          return 0;//La piece ne peu plus descendre
-        }
-
-      }
-    }
-  }
-  return 1;//La piece peu descendre
-}
-
-/*On fixe la piece au plateau*/
-bool fixPiece(){
-  /*
-  0 = La piece n'a pas pus etre fixé
-  1 = La piece a ete fixé
-  */
-  //Pour chaque case de la piece
-  for(int x=0;x<4;x++){
-    for(int y=0;y<4;y++){
-      //Si la case de la piece est pleine
-      if(piece[x][y] == 1){
-        //On la definie comme la case du plateau
-        plateau[piecePosX+x][piecePosY+y].color = pieceCouleur;
-
-      }
-    }
-  }
-  return 1;//La piece a bien été fixé
-}
-
-/*DASH*/
-bool dashPiece(){
-  //tant que la piece peu descendre
-  while(checkDescentePiece()){
-    piecePosY++;
-  }
-  //Sinon la piece est déposé
-  //on fixe la piece
-  fixPiece();
-  //On genere une nouvelle piece
-  pieceGenerateur();
-}
-
-int main(){
-  // Creation de la fenetre de jeux
-  RenderWindow gameWindow(VideoMode(320, 480), "Tetris");
-
-  /*CREATION DES TEXTURES*/
-  //On cree la texture du fond
-  Texture backgroundTexture;
-  //On charge la texture du fond
-  backgroundTexture.loadFromFile("img/Board.png");
-  //On cree la texture des cases des block
-  Texture tileTexture;
-  //On charge la texture des cases des block
-  tileTexture.loadFromFile("img/tiles.png");
-  /*#####################*/
-
-  /*CREATION DES SPRITES*/
-  //On cree le sprite du fond
-  Sprite fondSprite(backgroundTexture);
-  //On cree le sprite de la case du block
-  Sprite tileSprite(tileTexture);
-  /*#####################*/
-
-  //On reinitialise le timer du jeux
-  gameTimer.restart();
-
-  //On genere la piece TEMPORAIRE
-  pieceGenerateur();
-
-
-
-  //Tant que le jeux tourne
-  while(gameWindow.isOpen()){
-    /*EVENEMENT*/
-    //On recupere l'evenement de la fenetre de jeux
-    Event e;
-    //Tant qu'il y a un evenement
-    while(gameWindow.pollEvent(e)){
-      //Si on arrete la fenetre
-      if(e.type == Event::Closed){
-        //On ferme la fenetre
-        gameWindow.close();
-      }
-      //Si une touche du clavier
-      if(e.type == Event::KeyPressed){
-        //Si la touche UP
-        if(e.key.code == Keyboard::Up){
-          //On verifie si on peu tourner la piece et si oui on tourne la piece
-          rotation();
-        }
-        //Si la touche GAUCHE
-        if(e.key.code == Keyboard::Left){
-          //On check si on peu deplacer la piece vers la gauche
-          if(checkLateralMovement(-1)){
-            //On deplace toute les case qui bouge vers la gauche
-            piecePosX--;
+      for(int y=0;y<4;y++){ //Pour chaque ligne de la futurePiece
+        for(int x=0;x<4;x++){ //Pour chaque valeur de la ligne
+          if((plateau[y][x] != 0 || x+piece.posX < 0 || x+piece.posX >= largeur || y+piece.posY < 0 || y+piece.posY >= hauteur) && prmFuturePiece[y][x] == 1){ //Si la case de la futurePiece est utilisé ET que sa future position est utilisé
+            return 0; //La piece superposera une case du plateau
           }
         }
-        //Si la touche DROITE
-        if(e.key.code == Keyboard::Right){
-          //On check si on peu deplacer la piece vers la droite
-          if(checkLateralMovement(1)){
-            //On deplace toute les case qui bouge vers la droite
-            piecePosX++;
+      }
+      for(int y=0;y<4;y++){ //Pour chaque ligne de la futurePiece
+        for(int x=0;x<4;x++){ //Pour chaque valeur de la ligne
+            piece.cases[y][x] = prmFuturePiece[y][x]; //On applique le changement
+        }
+      }
+      return 1; //Ne superpose aucune case du plateau
+    }
+    bool checkSuperposition(int prmFuturePosX, int prmFuturePosY){  //Si la piece superpose une case du plateau ou sort du plateau
+      /*
+        Vrai = La piece superpose
+        False = La piece ne superpose pas
+      */
+      for(int y=0;y<4;y++){ //Pour chaque ligne de la piece
+        for(int x=0;x<4;x++){ //Pour chaque valeur de la ligne
+          if(piece.cases[y][x] == 1 && (plateau[y+prmFuturePosY][x+prmFuturePosX] != 0 || x+prmFuturePosX < 0 || x+prmFuturePosX >= largeur || y+prmFuturePosY < 0 || y+prmFuturePosY >= hauteur)){ //Si la case de la piece est utilisé ET que sa future position est utilisé
+            return 1; //La piece superposera une case du plateau ou sort du plateau
           }
         }
-        //Si la touche DOWN
-        if(e.key.code == Keyboard::Down){
-          //On dash la piece
-          dashPiece();
+      }
+      return 0; //Ne superpose aucune case du plateau
+    }
+  public:
+    /*VARIABLES*/
+    sf::Sprite fondSprite;  //Sprite du fond
+    sf::Sprite tileSprite;  //Sprite de la case
+    unsigned int hauteur = 20; //Hauteur du plateau
+    unsigned int largeur = 10; //Largeur du plateau
+    int plateau[20][10]; //Plateau  (0 = vide sinon couleur de la case)
+
+    struct{
+      bool cases[4][4]; //Toute les case de la piece
+      int posX = 0; //Position de la piece par rapport au plateau
+      int posY = 0; //Position de la piece par rapport au plateau
+      int type; //Type de la piece
+      int sens = 1; //Sens de 1 a 4 max
+      int color;  //La couleur de la piece
+    }piece;
+    /*
+    1 = I
+    2 = J
+    3 = L
+    4 = O
+    5 = S
+    6 = T
+    7 = Z
+    */
+    /*
+    0 = vide
+    1 = bleu
+    2 = violet
+    3 = rouge
+    4 = vert
+    5 = jaune
+    6 = bleu clair
+    7 = orange
+    8 = bleu
+    */
+
+    sf::Texture backgroundTexture;  //Texture du fond
+    //case = 18x18
+    sf::Texture tileTexture;  //Texture des case
+
+    /*FUNCTIONS*/
+    void resetPlateau(){ //Initialisation du plateau
+      for(unsigned int y=0;y<hauteur;y++){ //Pour chaque ligne du plateau
+        for(unsigned int x=0;x<largeur;x++){ //Pour chaque valeur de la ligne
+          plateau[y][x] = 0;  //On vide la case
         }
       }
     }
-
-    //Si on doit mettre a jour le plateau
-    if(gameTimer.getElapsedTime().asSeconds() > delay){
-      //On remet le timer a 0
-      gameTimer.restart();
-
-
-      /*CHECK SI LIGNE COMPLETE*/
-      //Pour chaque ligne du plateau en partant du haut
-      for(int y=0;y<hauteur;y++){
-        //Nombre de case pleine dans la ligne
-        int nbCasePleine = 0;
-        for(int x=0;x<largeur;x++){
-          //Si la case est pleine
-          if(plateau[x][y].color != 0){
-            //On ajoute 1 au nombre de case pleine dans la ligne
-            nbCasePleine++;
+    void resetPiece(){  //Initialisation de la piece
+      piece.posX = 0;  //On remet la position à 0
+      piece.posY = 0;  //On remet la position à 0
+      for(int y=0;y<4;y++){ //Pour chaque ligne de la piece
+        for(int x=0;x<4;x++){ //Pour chaque valeur de la ligne
+          piece.cases[y][x] = 0;  //On vide la case
+        }
+      }
+    }
+    void loadTexture(){ //On charge les textures
+      backgroundTexture.loadFromFile("img/Board.png");  //On charge la texture du fond
+      tileTexture.loadFromFile("img/tiles.png");  //On charge la texture de toute les cases
+    }
+    void loadSprite(){  //On charge les sprites
+      fondSprite.setTexture(backgroundTexture); //On definie la texture du fond
+      tileSprite.setTexture(tileTexture); //On definie la texture des cases
+    }
+    bool checkDescentePiece(){  //Si la piece peut descendre
+      /*
+      0 = ne peut pas descendre
+      1 = peut descendre
+      */
+      return !checkSuperposition(piece.posX,piece.posY+1);  //Si la piece qui descent superposera une case
+    }
+    bool pieceGenerator(){  //Generation de la piece
+      /*
+        Vrai = la piece a été posé
+        False = la piece n'a pas été posé
+      */
+      resetPiece(); //On remet la piece à 0
+      piece.sens = 1; //On remet le sens de la piece par defaut
+      piece.color = random(1,8);  //On prend une couleur aleatoire
+      piece.type = random(1,7); //On prend un type de piece aleatoire
+      piece.posX = largeur/2; //On centre la piece par rapport au plateau
+      piece.posY = 0; //On met la piece tout en haut du plateau
+      setPiece(); //On definie les cases de la piece
+      return !checkSuperposition(piece.posX,piece.posY);  //On retourne si la piece peut etre posé ou non
+    }
+    void fixPiece(){  //On fixe la piece au plateau
+      for(int y=0;y<4;y++){ //Pour chaque ligne de la piece
+        for(int x=0;x<4;x++){ //Pour chaque valeur de la ligne
+          if(piece.cases[y][x] == 1){ //Si la case est utilisé
+            plateau[piece.posY+y][piece.posX+x] = piece.color; //On definie la case du plateau à la couleur de la case de la piece
           }
         }
-        //Si la ligne est pleine
-        if(nbCasePleine == largeur){
-          //On efface la ligne
-          for(int x=0;x<largeur;x++){
-            //On efface la case
-            plateau[x][y].color = 0;
+      }
+    }
+    bool rotation(){
+      /*
+      0 = a pus etre posé
+      1 = n'a pas pus etre posé
+      */
+      int oldSens = piece.sens; //L'ancien sens de la piece si elle ne peu pas etre posé
+      switch(piece.type){  //Pour chaque type de piece
+        case 1://I
+          piece.sens++;  //Position suivante
+          if(piece.sens > 2){  //Si tour complet
+            piece.sens = 1; //Sens par defaut
           }
-          //On baisse toute les case au dessus
-          //Pour chaque ligne en partant de la ligne juste au dessus de la ligne actuel et on se deplace vers le haut
-          for(int tempY=y-1;tempY>0;tempY--){
-            //Pour chaque case de la ligne
-            for(int x=0;x<largeur;x++){
-              //On baisse la case du plateau de 1 case vers le bas
-              plateau[x][tempY+1].color = plateau[x][tempY].color;
+          break;
+        case 2://J
+          piece.sens++;  //Position suivante
+          if(piece.sens > 4){  //Si tour complet
+            piece.sens = 1; //Sens par defaut
+          }
+          break;
+        case 3://L
+          piece.sens++;  //Position suivante
+          if(piece.sens > 4){  //Si tour complet
+            piece.sens = 1; //Sens par defaut
+          }
+          break;
+        //O  Ne tourne pas
+        case 5://S
+          piece.sens++;  //Position suivante
+          if(piece.sens > 2){  //Si tour complet
+            piece.sens = 1; //Sens par defaut
+          }
+          break;
+        case 6://T
+          piece.sens++;  //Position suivante
+          if(piece.sens > 4){  //Si tour complet
+            piece.sens = 1; //Sens par defaut
+          }
+          break;
+        case 7://Z
+          piece.sens++;  //Position suivante
+          if(piece.sens > 2){  //Si tour complet
+            piece.sens = 1; //Sens par defaut
+          }
+          break;
+      }
+      if(!setPiece()){  //Si la piece superpose une case du plateau
+        piece.sens = oldSens; //On remet l'ancien sens de la piece
+        return 0; //N'a pas été posé
+      }
+      return 1; //A été posé
+    }
+    bool lateralMovement(int sens){ //Mouvement lateral de la piece
+      /*
+      0 = La piece n'a pas été placé
+      1 = La piece a été placé
+      */
+      if(!checkSuperposition(piece.posX + sens, piece.posY)){ //Si on peut déplacé la piece dans la direction demandé
+        piece.posX = piece.posX + sens; //On applique le mouvement lateral
+        return 1; //La piece a été placé
+      }
+      return 0; //La piece n'a pas été placé
+    }
+    void dash(){  //On dash la piece
+      //tant que la piece peu descendre
+      while(checkDescentePiece()){ //Tant que la piece peut descendre
+        piece.posY++; //On descent la piece de 1
+      }
+      fixPiece(); //On fixe la piece
+      pieceGenerator(); //On genere une nouvelle piece
+    }
+};
+
+class Party{  //Partie en cour (affichage du score actuel, et timer)
+  private:
+    /*VARIABLES*/
+    Board Plateau;  //On créé l'instance du plateau
+    sf::Clock gameTimer;  //Temp entre chaque update du jeux
+    float delay = 0.5;  //Temp à attendre avant de faire une update
+
+    /*FUNCTIONS*/
+
+  public:
+    /*VARIABLES*/
+    /*FUNCTIONS*/
+    void load(){  //On charge tout ce qu'il faut pour la partie
+      Plateau.resetPlateau();  //On charge le plateau
+      Plateau.resetPiece(); //On charge la piece
+      Plateau.loadTexture();  //On charge les textures
+      Plateau.loadSprite(); //On charge les sprites
+    }
+    int start(){ //On lance la partie
+      gameTimer.restart();  //On remet le timer à 0
+      Plateau.pieceGenerator(); //On genere la premiere piece
+      return 0; //La partie a bien commencé
+    }
+    void event(sf::Event e){  //On execute l'evenement
+      if(e.type == sf::Event::KeyPressed){  //Si l'evenement est une touche du clavier
+        if(e.key.code == sf::Keyboard::Up){  //Si la touche HAUT est pressé
+          Plateau.rotation(); //On effectue la rotation
+        }
+        if(e.key.code == sf::Keyboard::Left){  //Si la touche GAUCHE est pressé
+          Plateau.lateralMovement(-1);  //On deplace la piece vers la gauche
+        }
+        if(e.key.code == sf::Keyboard::Right){  //Si la touche DROITE est pressé
+          Plateau.lateralMovement(1);  //On deplace la piece vers la droite
+        }
+        if(e.key.code == sf::Keyboard::Down){  //Si la touche BAS est pressé
+          Plateau.dash(); //On dash la piece
+        }
+      }
+    }
+    int update(sf::RenderWindow *gameWindow){ //On avance la partie
+      /*
+      -1 = Perdu
+      0 = La partie continue
+      1 = Gagné
+      */
+
+      if(gameTimer.getElapsedTime().asSeconds() > delay){ //Si on doit mettre à jour le plateau
+        gameTimer.restart();  //On remet le timer a 0
+
+        /*CHECK SI LIGNE COMPLETE*/
+        for(int y=0;y<Plateau.hauteur;y++){ //Pour chaque ligne du plateau en partant du haut
+          int nbCasePleine = 0; //Nombre de case utilisé par ligne
+          for(int x=0;x<Plateau.largeur;x++){ //Pour chaque case de la ligne
+            if(Plateau.plateau[y][x] != 0){ //Si la case du plateau est utilisé
+              nbCasePleine++; //On ajoute 1 au nombre de case utilisé dans la ligne
+            }
+          }
+          if(nbCasePleine == Plateau.largeur){  //Si la ligne est entière
+            for(int x=0;x<Plateau.largeur;x++){ //Pour chaque case de la ligne
+              Plateau.plateau[y][x] = 0;  //On efface la case
+            }
+            for(int tempY=y-1;tempY>0;tempY--){ //Pour chaque ligne en partant de la ligne juste au dessus
+              for(int x=0;x<Plateau.largeur;x++){ //Pour chaque case de la ligne
+                Plateau.plateau[tempY+1][x] = Plateau.plateau[tempY][x];  //On deplace la valeur a la case juste en dessous
+              }
             }
           }
         }
+        /*#######################*/
+
+        /*DESCENTE DE LA PIECE*/
+        if(Plateau.checkDescentePiece()){ //Si la piece peut descendre
+          Plateau.piece.posY++;  //On descent la piece
+        }else{  //Sinon la piece est déposé
+          Plateau.fixPiece(); //On fixe la piece
+          bool isCreated = Plateau.pieceGenerator(); //On genere une nouvelle piece
+          if(isCreated == false){ //Si la piece ne peut pas etre placé
+            return -1;  //Partie finie : Perdu
+          }
+        }
+        /*####################*/
+
       }
-      /*#######################*/
 
+      gameWindow->clear(sf::Color::Black); //On efface l'ecran et on le met en noir
+      int prmDispX = 5; //Position initial du plateau
+      int prmDispY = 5; //Position initial du plateau
 
-      /*DESCENTE DE LA PIECE*/
-      //On regarde si la piece peu descendre
-      if(checkDescentePiece()){
-        piecePosY++;
-      }else{//Sinon la piece est déposé
-        //on fixe la piece
-        fixPiece();
-        //On genere une nouvelle piece
-        bool isCreated = pieceGenerateur();
-        //Si la piece n'a pas pus etre generer
-        if(isCreated == false){
-          gameWindow.close();
+      //Affichage du plateau
+      Plateau.fondSprite.setPosition(prmDispX,prmDispY);  //On place le plateau a la position demandé
+      gameWindow->draw(Plateau.fondSprite); //On affiche le plateau
+      for(int y=0;y<Plateau.hauteur;y++){ //Pour chaque ligne du plateau
+        for(int x=0;x<Plateau.largeur;x++){ //Pour chaque case de la ligne
+          Plateau.tileSprite.setTexture(Plateau.tileTexture); //On reinitialise le sprite
+          if(Plateau.plateau[y][x] != 0){ //Si la case du plateau est utilisé
+            int caseColor = (Plateau.plateau[y][x]);  //On prend la couleur de la case
+            //Case 18x18
+            Plateau.tileSprite.setTextureRect(sf::IntRect((caseColor-1)*18,0,18,18)); //COULEUR
+            Plateau.tileSprite.setPosition(prmDispX+(x*18),prmDispY+(y*18));  //Position de la case
+            gameWindow->draw(Plateau.tileSprite); //On affiche la case
+          }
         }
       }
-      /*####################*/
+
+      //Affichage de la piece
+      Plateau.tileSprite.setTexture(Plateau.tileTexture); //On reinitialise la couleur des cases
+      Plateau.tileSprite.setTextureRect(sf::IntRect((Plateau.piece.color-1)*18,0,18,18)); //COULEUR
+      for(int y=0;y<4;y++){ //Pour chaque ligne de la piece
+        for(int x=0;x<4;x++){ //Pour chaque case de la ligne
+          if(Plateau.piece.cases[y][x] == 1){ //Si la case est utilisé
+            Plateau.tileSprite.setPosition(prmDispX+(x+Plateau.piece.posX)*18,prmDispY+(y+Plateau.piece.posY)*18);  //On definie la position a celle de la case
+            gameWindow->draw(Plateau.tileSprite); //On affiche la case
+          }
+        }
+      }
+      return 0; //Le jeux continue
     }
 
-    /*AFFICHAGE*/
-    //On efface l'ecran et on le remplis de blanc
-    //gameWindow.clear(Color::White);
-    gameWindow.clear(Color::Black);
+};
 
-    //Affichage du fond
-    gameWindow.draw(fondSprite);
+class Tetris{ //Menu est gestion
+  private:
+    /*VARIABLES*/
+    Party Partie;  //On créé l'instance de la partie
+    /*FUNCTIONS*/
 
-    //Affichage du plateau
-    for(int x=0;x<largeur;x++){
-      for(int y=0;y<hauteur;y++){
-        //On reinitialise le sprite
-        Sprite tileSprite(tileTexture);
-        //On verifie si la case existe
-        if(plateau[x][y].color != 0){
-          //On definie la couleur
-          int caseColor = (plateau[x][y].color);
-          tileSprite.setTextureRect(IntRect((caseColor-1)*18,0,18,18)); //COULEUR
-          //On definie sa position
-          tileSprite.setPosition(x*18,y*18);
-          //On affiche la case
-          gameWindow.draw(tileSprite);
-        }
-      }
+  public:
+    /*VARIABLES*/
+    sf::RenderWindow gameWindow;  //Ecran de jeux
+
+    /*FUNCTIONS*/
+    void setScreen(std::string prmTitle, const int prmHauteur, const int prmLargeur){ //Mise en place de l'ecran de jeux
+      gameWindow.create(sf::VideoMode(prmHauteur,prmLargeur), prmTitle);  //On créé l'ecran de jeux
     }
-
-    //Affichage de la piece
-    //on change la couleur du sprite en la couleur de la piece
-    //on reinitialise le sprite
-    Sprite tileSprite(tileTexture);
-    //On definie la couleur
-    tileSprite.setTextureRect(IntRect((pieceCouleur-1)*18,0,18,18)); //COULEUR
-    for(int x=0;x<4;x++){
-      for(int y=0;y<4;y++){
-        //Si il y a une case pleine
-        if(piece[x][y] == 1){
-          //On definie sa position
-          tileSprite.setPosition((x+piecePosX)*18,(y+piecePosY)*18);
-          //On affiche la case
-          gameWindow.draw(tileSprite);
+    void start(){ //On demarre le jeux
+      //MENU
+      //...
+      //...
+      //...
+      Partie.load();  //On charge tout ce qu'il faut pour la partie
+      int result = Partie.start(); //On commence la partie
+      while(result == 0){ //Tant que la partie se joue
+        sf::Event e;  //On récupère l'evenement
+        while(gameWindow.pollEvent(e)){ //Pour chaque evenement
+          if(e.type == sf::Event::Closed){  //Si on ferme la fenetre
+            gameWindow.close(); //On ferme la fenetre de jeux
+            result = -1;  //Perdu
+          }
+          Partie.event(e); //On effectue les evenements
         }
-      }
-    };
+        result = Partie.update(&gameWindow);  //On met a jour la partie
 
-    //On affiche l'ecran
-    gameWindow.display();
-    /*#####################*/
-  }
+        gameWindow.display(); //On affiche l'ecran
+      }
+      //result;
+    }
+};
+
+int main(){
+  Tetris Game;  //On créé l'instance du jeux
+  Game.setScreen("Tetris", 320, 480); //On créé l'ecran de jeux
+
+  Game.start(); //On demarre le jeux
+
   return 0;
 }
