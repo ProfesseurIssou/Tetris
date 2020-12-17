@@ -1,10 +1,10 @@
-//Point
+//Level progression
 //MultiJoueur
 
 #include <iostream> //CIN COUT ENDL
 
 #include <cstdlib> //Pour random
-#include <string> //Pour les string
+#include <string>   //std::string, std::to_string
 #include <SFML/Graphics.hpp>
 
 /*VARIABLE GLOBAL*/
@@ -14,6 +14,8 @@ const unsigned int boardPositionX = 440;    //Position du plateau sur l'ecran (p
 const unsigned int boardPositionY = 70;     //Position du plateau sur l'ecran (pour les piece)
 const float caseScaleX = 2.2;           //Echelle de la piece
 const float caseScaleY = 2.2;           //Echelle de la piece
+unsigned int level = 0;       //Level actuel
+unsigned int score  = 0;      //Score de la partie
 struct boardStruct{
   unsigned int board[21][10];   //Plateau de données(0 = vide sinon couleur de la case)
   unsigned int hauteur = 21;    //Hauteur du plateau
@@ -33,6 +35,7 @@ sf::Texture backgroundTexture;//Texture du fond
 sf::Texture tileTexture;      //Texture des case (18x18)
 sf::Sprite fondSprite;        //Sprite du fond
 sf::Sprite tileSprite;        //Sprite de la case
+sf::Font font;                //Police de texte
 /*###############*/
 
 int Random(int min, int max){ //range : [min, max]
@@ -359,6 +362,20 @@ void UpdateDisplay(struct pieceStruct &piece, struct boardStruct &plateau){ //Mi
     }
   }
 
+  //Affichage du score
+  sf::Text scoreText;                       //On cree le texte du score
+  scoreText.setFont(font);                  //On definie la police du texte
+  scoreText.setFillColor(sf::Color::White); //Couleur de texte en blanc
+  scoreText.setCharacterSize(45);           //On met la taille a 24Pixels
+  scoreText.setPosition(870,50);            //On definie la position
+  std::string tempText;             //Variable temporaire pour preparer le texte du score
+  tempText = std::to_string(score); //On passe le score en texte
+  while(tempText.size() <= 6){      //Tant que le texte du score n'est pas egal a 6 caractere
+    tempText = "0"+tempText;          //On ajoute un 0 avant le score
+  }
+  scoreText.setString(tempText);    //On definie le texte du score
+  gameWindow.draw(scoreText);       //On affiche le texte du score
+
   gameWindow.display(); //On affiche l'ecran
 }
 
@@ -378,7 +395,7 @@ int main(){
   gameWindow.create(sf::VideoMode(gameScreenLargeur,gameScreenHauteur),"Tetris");  //On créé l'ecran de jeux
 
   /*JEUX*/
-  while (gameRunning){        //Tant que le jeux tourne
+  while(gameRunning){         //Tant que le jeux tourne
     /*MENU*/
 
     /*####*/
@@ -387,8 +404,10 @@ int main(){
     bool partyRunning = true;   //Si la partie tourne
     struct boardStruct plateau;   //On créé le plateau
     struct pieceStruct piece;     //On créé la piece
-    sf::Clock gameTimer;            //Temp entre chaque update du jeux
+    sf::Clock gameTimer;        //Temp entre chaque update du jeux
     float delay = 0.5;          //Temp à attendre avant de faire une update
+    unsigned int level = 0;       //Level actuel
+    score  = 0;                   //Score de la partie
 
     ResetPlateau(plateau);  //On reset le plateau à 0(vide)
     ResetPiece(piece);      //On reset la piece (valeur par defaut)
@@ -398,12 +417,13 @@ int main(){
     fondSprite.setTexture(backgroundTexture);             //On definie la texture du fond
     tileSprite.setTexture(tileTexture);                   //On definie la texture des cases
     tileSprite.setScale(caseScaleX,caseScaleY);             //Echelle de la piece
+    font.loadFromFile("other/font/Tetris.ttf");             //On charge la police
 
     gameTimer.restart();            //On remet a 0 le timer de la partie
     PieceGenerator(piece,plateau);  //On genere la premiere piece
 
     /*PARTIE*/
-    while (partyRunning){ //Tant que la partie tourne
+    while(partyRunning){  //Tant que la partie tourne
       sf::Event e;          //On recupere l'evenement
       while(gameWindow.pollEvent(e)){ //Pour chaque evenement
         if(e.type == sf::Event::Closed){//Si on ferme la fenetre
@@ -428,7 +448,9 @@ int main(){
       }
       if(gameTimer.getElapsedTime().asSeconds() > delay){ //Si on doit mettre a jour le plateau
         gameTimer.restart();  //On remet le timer a 0
+
         /*CHECK SI LIGNE COMPLETE*/
+        unsigned int nbLineErased = 0;      //Nombre de ligne efface
         for(int y=0;y<plateau.hauteur;y++){ //Pour chaque ligne du plateau en partant du haut
           int nbCasePleine = 0;               //Nombre de case utilise par ligne
           for(int x=0;x<plateau.largeur;x++){ //Pour chaque case de la ligne
@@ -437,6 +459,7 @@ int main(){
             }
           }
           if(nbCasePleine == plateau.largeur){//Si la ligne est entiere
+            nbLineErased++;                     //On ajoute 1 a la ligne efface
             for(int x=0;x<plateau.largeur;x++){ //Pour chaque case de la ligne
               plateau.board[y][x] = 0;            //On efface la case
             }
@@ -450,6 +473,22 @@ int main(){
         }
         /*#######################*/
 
+        /*CALCUL DU SCORE*/
+        switch(nbLineErased){ //Pour chaque nombre de ligne efface
+          case 1: //Une lignes
+            score = score + 40*(level+1);
+            break;
+          case 2: //Deux lignes
+            score = score + 100*(level+1);
+            break;
+          case 3: //Trois lignes
+            score = score + 300*(level+1);
+            break;
+          case 4: //Quatre lignes
+            score = score + 1200*(level+1);
+            break;
+        }
+        /*###############*/
 
         /*DESCENTE DE LA PIECE*/
         if(CheckDescentePiece(piece,plateau)){  //Si la piece peut descendre

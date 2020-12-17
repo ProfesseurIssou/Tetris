@@ -150,3 +150,11 @@ piece
 	[0,0,1,0]
 	[0,0,0,0]
 ]
+
+
+Level	Points for 1 line	Points for 2 lines		Points for 3 lines		Points for 4 lines
+0			40					100						300						1200
+1			80					200						600						2400
+2			120					300						900						3600
+9			400					1000					3000					12000
+n			40 * (n + 1)		100 * (n + 1)			300 * (n + 1)			1200 * (n + 1)
