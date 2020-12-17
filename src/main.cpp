@@ -1,4 +1,3 @@
-//Dash animation
 //Point
 //MultiJoueur
 
@@ -331,14 +330,6 @@ void FixPiece(struct pieceStruct &piece, struct boardStruct &plateau){  //On fix
   }
 }
 
-void Dash(struct pieceStruct &piece, struct boardStruct &plateau){  //On dash la piece
-  while(CheckDescentePiece(piece,plateau)){  //Tant que la piece peut descendre
-    piece.posY++;                 //On descent la piece de 1
-  }
-  FixPiece(piece,plateau);  //On fixe la piece
-  PieceGenerator(piece,plateau);  //On genere une nouvelle piece
-}
-
 void UpdateDisplay(struct pieceStruct &piece, struct boardStruct &plateau){ //Mise a jour de l'affichage du terrain
   gameWindow.clear(sf::Color::Black); //On efface l'ecran et on le remplis de noir
 
@@ -369,6 +360,16 @@ void UpdateDisplay(struct pieceStruct &piece, struct boardStruct &plateau){ //Mi
   }
 
   gameWindow.display(); //On affiche l'ecran
+}
+
+void Dash(struct pieceStruct &piece, struct boardStruct &plateau){  //On dash la piece
+  while(CheckDescentePiece(piece,plateau)){  //Tant que la piece peut descendre
+    piece.posY++;                   //On descent la piece de 1
+    UpdateDisplay(piece,plateau);   //On met a jour l'affichage
+    sf::sleep(sf::milliseconds(10));//On attend 10ms
+  }
+  FixPiece(piece,plateau);  //On fixe la piece
+  PieceGenerator(piece,plateau);  //On genere une nouvelle piece
 }
 
 int main(){
