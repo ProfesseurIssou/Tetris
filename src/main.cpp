@@ -1,4 +1,3 @@
-//Level progression
 //MultiJoueur
 
 #include <iostream> //CIN COUT ENDL
@@ -14,8 +13,9 @@ const unsigned int boardPositionX = 440;    //Position du plateau sur l'ecran (p
 const unsigned int boardPositionY = 70;     //Position du plateau sur l'ecran (pour les piece)
 const float caseScaleX = 2.2;           //Echelle de la piece
 const float caseScaleY = 2.2;           //Echelle de la piece
-unsigned int level = 0;       //Level actuel
-unsigned int score  = 0;      //Score de la partie
+unsigned int totalClearedLine = 0;  //Nombre de ligne efface au total
+unsigned int level = 0;             //Level actuel
+unsigned int score  = 0;            //Score de la partie
 struct boardStruct{
   unsigned int board[21][10];   //Plateau de données(0 = vide sinon couleur de la case)
   unsigned int hauteur = 21;    //Hauteur du plateau
@@ -370,11 +370,37 @@ void UpdateDisplay(struct pieceStruct &piece, struct boardStruct &plateau){ //Mi
   scoreText.setPosition(870,50);            //On definie la position
   std::string tempText;             //Variable temporaire pour preparer le texte du score
   tempText = std::to_string(score); //On passe le score en texte
-  while(tempText.size() <= 6){      //Tant que le texte du score n'est pas egal a 6 caractere
+  while(tempText.size() < 6){       //Tant que le texte du score n'est pas egal a 6 caractere
     tempText = "0"+tempText;          //On ajoute un 0 avant le score
   }
   scoreText.setString(tempText);    //On definie le texte du score
   gameWindow.draw(scoreText);       //On affiche le texte du score
+
+  //Afficher le level
+  sf::Text levelText;                       //On cree le texte du level
+  levelText.setFont(font);                  //On definie la police du texte
+  levelText.setFillColor(sf::Color::White); //Couleur de texte en blanc
+  levelText.setCharacterSize(45);           //On met la taille a 24Pixels
+  levelText.setPosition(1075,112);          //On definie la position
+  tempText = std::to_string(level); //On passe le level en texte
+  while(tempText.size() < 3){       //Tant que le texte du level n'est pas egal a 3 caractere
+    tempText = "0"+tempText;          //On ajoute un 0 avant le level
+  }
+  levelText.setString(tempText);    //On definie le texte du level
+  gameWindow.draw(levelText);       //On affiche le texte du level
+
+  //Afficher le nombre de ligne
+  sf::Text lineText;                       //On cree le texte du nombre de lignes
+  lineText.setFont(font);                  //On definie la police du texte
+  lineText.setFillColor(sf::Color::White); //Couleur de texte en blanc
+  lineText.setCharacterSize(45);           //On met la taille a 24Pixels
+  lineText.setPosition(738,16);          //On definie la position
+  tempText = std::to_string(totalClearedLine); //On passe le nombre de lignes en texte
+  while(tempText.size() < 3){       //Tant que le texte du nombre de lignes n'est pas egal a 3 caractere
+    tempText = "0"+tempText;          //On ajoute un 0 avant le nombre de lignes
+  }
+  lineText.setString(tempText);    //On definie le texte du nombre de lignes
+  gameWindow.draw(lineText);       //On affiche le texte du nombre de lignes
 
   gameWindow.display(); //On affiche l'ecran
 }
@@ -405,9 +431,11 @@ int main(){
     struct boardStruct plateau;   //On créé le plateau
     struct pieceStruct piece;     //On créé la piece
     sf::Clock gameTimer;        //Temp entre chaque update du jeux
-    float delay = 0.5;          //Temp à attendre avant de faire une update
-    unsigned int level = 0;       //Level actuel
-    score  = 0;                   //Score de la partie
+    float delay = 0.50;         //Temp à attendre avant de faire une update
+    unsigned int nbClearedLine=0;   //Nombre de ligne nettoyees dans la frame
+    totalClearedLine = 0;           //Nombre total de ligne nettoyees
+    level = 0;                      //Level actuel
+    score  = 0;                     //Score de la partie
 
     ResetPlateau(plateau);  //On reset le plateau à 0(vide)
     ResetPiece(piece);      //On reset la piece (valeur par defaut)
@@ -490,6 +518,30 @@ int main(){
         }
         /*###############*/
 
+        /*LEVEL SYSTEM*/
+        if(nbLineErased != 0){  //Si il y a eu des lignes nettoyees
+          totalClearedLine += nbLineErased; //On ajoute le nombre de ligne vide
+          if(totalClearedLine-(10*level) >= 10){//Si le nombre total de ligne nettoyees moins le nombre de ligne nettoyees pour atteindre le niveau est superieur ou egal a 10 (donc level suivant)
+            level++;  //Level suivant
+          }
+        }
+        if(level < 10){ //Level de 0 a 9
+          delay = 0.50-(level*0.05);
+        }
+        if((10 <= level) && (level < 13)){//Level de 10 a 12
+          delay = 0.4;
+        }
+        if((13 <= level) && (level < 16)){//Level de 13 a 15
+          delay = 0.3;
+        }
+        if((16 <= level) && (level < 19)){//Level de 16 a 18
+          delay = 0.2;
+        }
+        if(19 <= level){//Level a partir de 19
+          delay = 0.1;
+        }
+        /*############*/
+
         /*DESCENTE DE LA PIECE*/
         if(CheckDescentePiece(piece,plateau)){  //Si la piece peut descendre
           piece.posY++;                           //On descent la piece
@@ -501,9 +553,7 @@ int main(){
           }
         }
         /*####################*/
-
-
-    }
+      }
 
       UpdateDisplay(piece,plateau); //On met a jour l'affichage
     }
