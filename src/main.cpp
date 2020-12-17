@@ -1,4 +1,3 @@
-//Taille piece
 //Dash animation
 //Point
 //MultiJoueur
@@ -12,11 +11,13 @@
 /*VARIABLE GLOBAL*/
 const unsigned int gameScreenHauteur = 1000;//Taille en pixel en hauteur
 const unsigned int gameScreenLargeur = 1250;//Taille en pixel en largeur
-const unsigned int boardPositionX = 432;    //Position du plateau sur l'ecran (pour les piece)
-const unsigned int boardPositionY = 93;     //Position du plateau sur l'ecran (pour les piece)
+const unsigned int boardPositionX = 440;    //Position du plateau sur l'ecran (pour les piece)
+const unsigned int boardPositionY = 70;     //Position du plateau sur l'ecran (pour les piece)
+const float caseScaleX = 2.2;           //Echelle de la piece
+const float caseScaleY = 2.2;           //Echelle de la piece
 struct boardStruct{
-  unsigned int board[20][10];   //Plateau de données(0 = vide sinon couleur de la case)
-  unsigned int hauteur = 20;    //Hauteur du plateau
+  unsigned int board[21][10];   //Plateau de données(0 = vide sinon couleur de la case)
+  unsigned int hauteur = 21;    //Hauteur du plateau
   unsigned int largeur = 10;    //Largeur plateau
 };
 struct pieceStruct{
@@ -349,7 +350,7 @@ void UpdateDisplay(struct pieceStruct &piece, struct boardStruct &plateau){ //Mi
       if(plateau.board[y][x] != 0){           //Si la case du plateau est utilise
         int caseColor = (plateau.board[y][x]);  //On prend la couleur de la case(18x18)
         tileSprite.setTextureRect(sf::IntRect((caseColor-1)*18,0,18,18)); //COULEUR
-        tileSprite.setPosition(boardPositionX+(x*18),boardPositionY+(y*18));//Position de la case
+        tileSprite.setPosition(boardPositionX+(x*18*caseScaleX),boardPositionY+(y*18*caseScaleY));//Position de la case
         gameWindow.draw(tileSprite);            //On affiche la case
       }
     }
@@ -361,7 +362,7 @@ void UpdateDisplay(struct pieceStruct &piece, struct boardStruct &plateau){ //Mi
   for(int y=0;y<4;y++){               //Pour chaque ligne de la piece
     for(int x=0;x<4;x++){               //Pour chaque case de la ligne
       if(piece.cases[y][x] == 1){         //Si la case est utilise
-        tileSprite.setPosition(boardPositionX+(x+piece.posX)*18,boardPositionY+(y+piece.posY)*18);//On definie la position a celle de la case
+        tileSprite.setPosition(boardPositionX+(x+piece.posX)*18*caseScaleX,boardPositionY+(y+piece.posY)*18*caseScaleY);//On definie la position a celle de la case
         gameWindow.draw(tileSprite);        //On affiche la case
       }
     }
@@ -395,6 +396,7 @@ int main(){
     tileTexture.loadFromFile("img/tiles.png");              //On charge la texture de toute les cases
     fondSprite.setTexture(backgroundTexture);             //On definie la texture du fond
     tileSprite.setTexture(tileTexture);                   //On definie la texture des cases
+    tileSprite.setScale(caseScaleX,caseScaleY);             //Echelle de la piece
 
     gameTimer.restart();            //On remet a 0 le timer de la partie
     PieceGenerator(piece,plateau);  //On genere la premiere piece
@@ -438,6 +440,7 @@ int main(){
               plateau.board[y][x] = 0;            //On efface la case
             }
             for(int tempY=y-1;tempY>0;tempY--){ //Pour chaque ligne en partant de la ligne juste au dessus
+
               for(int x=0;x<plateau.largeur;x++){ //Pour chaque case de la ligne
                 plateau.board[tempY+1][x] = plateau.board[tempY][x];//On deplace la valeur a la case juste en dessous
               }
