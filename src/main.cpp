@@ -1,4 +1,5 @@
 //MultiJoueur
+//Sounds
 
 #include <iostream> //CIN COUT ENDL
 
@@ -415,9 +416,13 @@ void Dash(struct pieceStruct &piece, struct boardStruct &plateau){  //On dash la
   PieceGenerator(piece,plateau);  //On genere une nouvelle piece
 }
 
+void Solo(bool &gameRunning);
+
 int main(){
   /*INITIALISATION JEUX*/
   bool gameRunning = true;  //Si le jeu tourne
+  bool multiplayer = false; //Si on est en multi ou non
+  bool mode = 0;            //0 = serveur, 1 = client
   gameWindow.create(sf::VideoMode(gameScreenLargeur,gameScreenHauteur),"Tetris");  //On créé l'ecran de jeux
 
   /*JEUX*/
@@ -427,136 +432,143 @@ int main(){
     /*####*/
 
     /*INITIALISATION PARTIE*/
-    bool partyRunning = true;   //Si la partie tourne
-    struct boardStruct plateau;   //On créé le plateau
-    struct pieceStruct piece;     //On créé la piece
-    sf::Clock gameTimer;        //Temp entre chaque update du jeux
-    float delay = 0.50;         //Temp à attendre avant de faire une update
-    unsigned int nbClearedLine=0;   //Nombre de ligne nettoyees dans la frame
-    totalClearedLine = 0;           //Nombre total de ligne nettoyees
-    level = 0;                      //Level actuel
-    score  = 0;                     //Score de la partie
-
-    ResetPlateau(plateau);  //On reset le plateau à 0(vide)
-    ResetPiece(piece);      //On reset la piece (valeur par defaut)
-
-    backgroundTexture.loadFromFile("img/background.png");   //On charge la texture du fond
-    tileTexture.loadFromFile("img/tiles.png");              //On charge la texture de toute les cases
-    fondSprite.setTexture(backgroundTexture);             //On definie la texture du fond
-    tileSprite.setTexture(tileTexture);                   //On definie la texture des cases
-    tileSprite.setScale(caseScaleX,caseScaleY);             //Echelle de la piece
-    font.loadFromFile("other/font/Tetris.ttf");             //On charge la police
-
-    gameTimer.restart();            //On remet a 0 le timer de la partie
-    PieceGenerator(piece,plateau);  //On genere la premiere piece
-
-    /*PARTIE*/
-    while(partyRunning){  //Tant que la partie tourne
-      sf::Event e;          //On recupere l'evenement
-      while(gameWindow.pollEvent(e)){ //Pour chaque evenement
-        if(e.type == sf::Event::Closed){//Si on ferme la fenetre
-          partyRunning = false;           //On stop la partie
-          gameRunning = false;            //On stop le jeux
-          gameWindow.close();             //On ferme l'ecrant de jeux
-        }
-        if(e.type == sf::Event::KeyPressed){//Si l'evenement est une touche du clavier
-          if(e.key.code == sf::Keyboard::Up){   //Si la touche HAUT est presse
-            Rotation(piece,plateau);              //On effectue la rotation
-          }
-          if(e.key.code == sf::Keyboard::Left){ //Si la touche GAUCHE est presse
-            LateralMovement(piece,plateau,-1);    //On deplace la piece vers la gauche
-          }
-          if(e.key.code == sf::Keyboard::Right){//Si la touche DROITE est presse
-            LateralMovement(piece,plateau,1);     //On deplace la piece vers la droite
-          }
-          if(e.key.code == sf::Keyboard::Down){ //Si la touche BAS est press�
-            Dash(piece,plateau);                  //On dash la piece
-          }
-        }
-      }
-      if(gameTimer.getElapsedTime().asSeconds() > delay){ //Si on doit mettre a jour le plateau
-        gameTimer.restart();  //On remet le timer a 0
-
-        /*CHECK SI LIGNE COMPLETE*/
-        unsigned int nbLineErased = 0;      //Nombre de ligne efface
-        for(int y=0;y<plateau.hauteur;y++){ //Pour chaque ligne du plateau en partant du haut
-          int nbCasePleine = 0;               //Nombre de case utilise par ligne
-          for(int x=0;x<plateau.largeur;x++){ //Pour chaque case de la ligne
-            if(plateau.board[y][x] != 0){       //Si la case du plateau est utilise
-              nbCasePleine++;                     //On ajoute 1 au nombre de case utilise dans la ligne
-            }
-          }
-          if(nbCasePleine == plateau.largeur){//Si la ligne est entiere
-            nbLineErased++;                     //On ajoute 1 a la ligne efface
-            for(int x=0;x<plateau.largeur;x++){ //Pour chaque case de la ligne
-              plateau.board[y][x] = 0;            //On efface la case
-            }
-            for(int tempY=y-1;tempY>0;tempY--){ //Pour chaque ligne en partant de la ligne juste au dessus
-
-              for(int x=0;x<plateau.largeur;x++){ //Pour chaque case de la ligne
-                plateau.board[tempY+1][x] = plateau.board[tempY][x];//On deplace la valeur a la case juste en dessous
-              }
-            }
-          }
-        }
-        /*#######################*/
-
-        /*CALCUL DU SCORE*/
-        switch(nbLineErased){ //Pour chaque nombre de ligne efface
-          case 1: //Une lignes
-            score = score + 40*(level+1);
-            break;
-          case 2: //Deux lignes
-            score = score + 100*(level+1);
-            break;
-          case 3: //Trois lignes
-            score = score + 300*(level+1);
-            break;
-          case 4: //Quatre lignes
-            score = score + 1200*(level+1);
-            break;
-        }
-        /*###############*/
-
-        /*LEVEL SYSTEM*/
-        if(nbLineErased != 0){  //Si il y a eu des lignes nettoyees
-          totalClearedLine += nbLineErased; //On ajoute le nombre de ligne vide
-          if(totalClearedLine-(10*level) >= 10){//Si le nombre total de ligne nettoyees moins le nombre de ligne nettoyees pour atteindre le niveau est superieur ou egal a 10 (donc level suivant)
-            level++;  //Level suivant
-          }
-        }
-        if(level < 10){ //Level de 0 a 9
-          delay = 0.50-(level*0.05);
-        }
-        if((10 <= level) && (level < 13)){//Level de 10 a 12
-          delay = 0.4;
-        }
-        if((13 <= level) && (level < 16)){//Level de 13 a 15
-          delay = 0.3;
-        }
-        if((16 <= level) && (level < 19)){//Level de 16 a 18
-          delay = 0.2;
-        }
-        if(19 <= level){//Level a partir de 19
-          delay = 0.1;
-        }
-        /*############*/
-
-        /*DESCENTE DE LA PIECE*/
-        if(CheckDescentePiece(piece,plateau)){  //Si la piece peut descendre
-          piece.posY++;                           //On descent la piece
-        }else{                                  //Sinon la piece est depose
-          FixPiece(piece,plateau);                //On fixe la piece
-          bool isCreated = PieceGenerator(piece,plateau); //On genere une nouvelle piece
-          if(isCreated == false){                 //Si la piece ne peut pas etre place
-            partyRunning = false;                   //Partie finie : Perdu
-          }
-        }
-        /*####################*/
-      }
-
-      UpdateDisplay(piece,plateau); //On met a jour l'affichage
+    if(multiplayer == false){ //Si on joue en solo
+      Solo(gameRunning);        //On lance la partie en solo
     }
+
   }
   return 0;
+}
+
+void Solo(bool &gameRunning){
+  bool partyRunning = true;   //Si la partie tourne
+  struct boardStruct plateau;   //On créé le plateau
+  struct pieceStruct piece;     //On créé la piece
+  sf::Clock gameTimer;        //Temp entre chaque update du jeux
+  float delay = 0.50;         //Temp à attendre avant de faire une update
+  unsigned int nbClearedLine=0;   //Nombre de ligne nettoyees dans la frame
+  totalClearedLine = 0;           //Nombre total de ligne nettoyees
+  level = 0;                      //Level actuel
+  score  = 0;                     //Score de la partie
+
+  ResetPlateau(plateau);  //On reset le plateau à 0(vide)
+  ResetPiece(piece);      //On reset la piece (valeur par defaut)
+
+  backgroundTexture.loadFromFile("img/background.png");   //On charge la texture du fond
+  tileTexture.loadFromFile("img/tiles.png");              //On charge la texture de toute les cases
+  fondSprite.setTexture(backgroundTexture);             //On definie la texture du fond
+  tileSprite.setTexture(tileTexture);                   //On definie la texture des cases
+  tileSprite.setScale(caseScaleX,caseScaleY);             //Echelle de la piece
+  font.loadFromFile("other/font/Tetris.ttf");             //On charge la police
+
+  gameTimer.restart();            //On remet a 0 le timer de la partie
+  PieceGenerator(piece,plateau);  //On genere la premiere piece
+
+  /*PARTIE*/
+  while(partyRunning){  //Tant que la partie tourne
+    sf::Event e;          //On recupere l'evenement
+    while(gameWindow.pollEvent(e)){ //Pour chaque evenement
+      if(e.type == sf::Event::Closed){//Si on ferme la fenetre
+        partyRunning = false;           //On stop la partie
+        gameRunning = false;            //On stop le jeux
+        gameWindow.close();             //On ferme l'ecrant de jeux
+      }
+      if(e.type == sf::Event::KeyPressed){//Si l'evenement est une touche du clavier
+        if(e.key.code == sf::Keyboard::Up){   //Si la touche HAUT est presse
+          Rotation(piece,plateau);              //On effectue la rotation
+        }
+        if(e.key.code == sf::Keyboard::Left){ //Si la touche GAUCHE est presse
+          LateralMovement(piece,plateau,-1);    //On deplace la piece vers la gauche
+        }
+        if(e.key.code == sf::Keyboard::Right){//Si la touche DROITE est presse
+          LateralMovement(piece,plateau,1);     //On deplace la piece vers la droite
+        }
+        if(e.key.code == sf::Keyboard::Down){ //Si la touche BAS est press�
+          Dash(piece,plateau);                  //On dash la piece
+        }
+      }
+    }
+    if(gameTimer.getElapsedTime().asSeconds() > delay){ //Si on doit mettre a jour le plateau
+      gameTimer.restart();  //On remet le timer a 0
+
+      /*CHECK SI LIGNE COMPLETE*/
+      unsigned int nbLineErased = 0;      //Nombre de ligne efface
+      for(int y=0;y<plateau.hauteur;y++){ //Pour chaque ligne du plateau en partant du haut
+        int nbCasePleine = 0;               //Nombre de case utilise par ligne
+        for(int x=0;x<plateau.largeur;x++){ //Pour chaque case de la ligne
+          if(plateau.board[y][x] != 0){       //Si la case du plateau est utilise
+            nbCasePleine++;                     //On ajoute 1 au nombre de case utilise dans la ligne
+          }
+        }
+        if(nbCasePleine == plateau.largeur){//Si la ligne est entiere
+          nbLineErased++;                     //On ajoute 1 a la ligne efface
+          for(int x=0;x<plateau.largeur;x++){ //Pour chaque case de la ligne
+            plateau.board[y][x] = 0;            //On efface la case
+          }
+          for(int tempY=y-1;tempY>0;tempY--){ //Pour chaque ligne en partant de la ligne juste au dessus
+
+            for(int x=0;x<plateau.largeur;x++){ //Pour chaque case de la ligne
+              plateau.board[tempY+1][x] = plateau.board[tempY][x];//On deplace la valeur a la case juste en dessous
+            }
+          }
+        }
+      }
+      /*#######################*/
+
+      /*CALCUL DU SCORE*/
+      switch(nbLineErased){ //Pour chaque nombre de ligne efface
+        case 1: //Une lignes
+          score = score + 40*(level+1);
+          break;
+        case 2: //Deux lignes
+          score = score + 100*(level+1);
+          break;
+        case 3: //Trois lignes
+          score = score + 300*(level+1);
+          break;
+        case 4: //Quatre lignes
+          score = score + 1200*(level+1);
+          break;
+      }
+      /*###############*/
+
+      /*LEVEL SYSTEM*/
+      if(nbLineErased != 0){  //Si il y a eu des lignes nettoyees
+        totalClearedLine += nbLineErased; //On ajoute le nombre de ligne vide
+        if(totalClearedLine-(10*level) >= 10){//Si le nombre total de ligne nettoyees moins le nombre de ligne nettoyees pour atteindre le niveau est superieur ou egal a 10 (donc level suivant)
+          level++;  //Level suivant
+        }
+      }
+      if(level < 10){ //Level de 0 a 9
+        delay = 0.50-(level*0.05);
+      }
+      if((10 <= level) && (level < 13)){//Level de 10 a 12
+        delay = 0.4;
+      }
+      if((13 <= level) && (level < 16)){//Level de 13 a 15
+        delay = 0.3;
+      }
+      if((16 <= level) && (level < 19)){//Level de 16 a 18
+        delay = 0.2;
+      }
+      if(19 <= level){//Level a partir de 19
+        delay = 0.1;
+      }
+      /*############*/
+
+      /*DESCENTE DE LA PIECE*/
+      if(CheckDescentePiece(piece,plateau)){  //Si la piece peut descendre
+        piece.posY++;                           //On descent la piece
+      }else{                                  //Sinon la piece est depose
+        FixPiece(piece,plateau);                //On fixe la piece
+        bool isCreated = PieceGenerator(piece,plateau); //On genere une nouvelle piece
+        if(isCreated == false){                 //Si la piece ne peut pas etre place
+          partyRunning = false;                   //Partie finie : Perdu
+        }
+      }
+      /*####################*/
+    }
+
+    UpdateDisplay(piece,plateau); //On met a jour l'affichage
+  }
 }
