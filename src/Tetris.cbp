@@ -64,6 +64,8 @@
 		</Linker>
 		<Unit filename="img/background.png" />
 		<Unit filename="img/tiles.png" />
+		<Unit filename="lib/UtilSFML.cpp" />
+		<Unit filename="lib/UtilSFML.h" />
 		<Unit filename="main.cpp" />
 		<Extensions />
 	</Project>
