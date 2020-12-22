@@ -6,7 +6,7 @@
 class TetrisGame{
   public:
     TetrisGame(sf::RenderWindow *window);
-    bool PlaySolo();  //La partie en solo
+    bool PlaySolo();  //La partie en solo (retourne si la fenetre a ete fermer
 
   private:
     //CONST

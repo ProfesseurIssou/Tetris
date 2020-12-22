@@ -413,23 +413,110 @@
 	<SFML/Graphics/Drawable.hpp>
 	<SFML/Window/GlResource.hpp>
 
-1608613926 source:d:\projet\cppgame\tetris\src\main.cpp
+1608673022 source:d:\projet\cppgame\tetris\src\main.cpp
 	<iostream>
 	<cstdlib>
 	<string>
 	<SFML/Graphics.hpp>
 	"lib/UtilSFML.h"
+	"TetrisMenu.h"
 	"TetrisGame.h"
 
-1608582910 source:d:\projet\cppgame\tetris\src\lib\utilsfml.cpp
+1608666816 source:d:\projet\cppgame\tetris\src\lib\utilsfml.cpp
 	"UtilSFML.h"
 
-1608582988 d:\projet\cppgame\tetris\src\lib\utilsfml.h
+1608666795 d:\projet\cppgame\tetris\src\lib\utilsfml.h
+	<sstream>
+	<string>
 	<SFML/Graphics.hpp>
+	<SFML/Network.hpp>
 
-1608614028 d:\projet\cppgame\tetris\src\include\tetrisgame.h
+1608671915 d:\projet\cppgame\tetris\src\include\tetrisgame.h
 	<SFML/Graphics.hpp>
 
 1608614094 source:d:\projet\cppgame\tetris\src\src\tetrisgame.cpp
 	"TetrisGame.h"
+
+1604589708 d:\autre\sfml-2.5.1\include\sfml\network.hpp
+	<SFML/System.hpp>
+	<SFML/Network/Ftp.hpp>
+	<SFML/Network/Http.hpp>
+	<SFML/Network/IpAddress.hpp>
+	<SFML/Network/Packet.hpp>
+	<SFML/Network/Socket.hpp>
+	<SFML/Network/SocketHandle.hpp>
+	<SFML/Network/SocketSelector.hpp>
+	<SFML/Network/TcpListener.hpp>
+	<SFML/Network/TcpSocket.hpp>
+	<SFML/Network/UdpSocket.hpp>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\ftp.hpp
+	<SFML/Network/Export.hpp>
+	<SFML/Network/TcpSocket.hpp>
+	<SFML/System/NonCopyable.hpp>
+	<SFML/System/Time.hpp>
+	<string>
+	<vector>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\export.hpp
+	<SFML/Config.hpp>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\tcpsocket.hpp
+	<SFML/Network/Export.hpp>
+	<SFML/Network/Socket.hpp>
+	<SFML/System/Time.hpp>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\socket.hpp
+	<SFML/Network/Export.hpp>
+	<SFML/Network/SocketHandle.hpp>
+	<SFML/System/NonCopyable.hpp>
+	<vector>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\sockethandle.hpp
+	<SFML/Config.hpp>
+	<basetsd.h>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\http.hpp
+	<SFML/Network/Export.hpp>
+	<SFML/Network/IpAddress.hpp>
+	<SFML/Network/TcpSocket.hpp>
+	<SFML/System/NonCopyable.hpp>
+	<SFML/System/Time.hpp>
+	<map>
+	<string>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\ipaddress.hpp
+	<SFML/Network/Export.hpp>
+	<SFML/System/Time.hpp>
+	<istream>
+	<ostream>
+	<string>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\packet.hpp
+	<SFML/Network/Export.hpp>
+	<string>
+	<vector>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\socketselector.hpp
+	<SFML/Network/Export.hpp>
+	<SFML/System/Time.hpp>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\tcplistener.hpp
+	<SFML/Network/Export.hpp>
+	<SFML/Network/Socket.hpp>
+	<SFML/Network/IpAddress.hpp>
+
+1604589710 d:\autre\sfml-2.5.1\include\sfml\network\udpsocket.hpp
+	<SFML/Network/Export.hpp>
+	<SFML/Network/Socket.hpp>
+	<SFML/Network/IpAddress.hpp>
+	<vector>
+
+1608672652 d:\projet\cppgame\tetris\src\include\tetrismenu.h
+	"../lib/UtilSFML.h"
+	<sstream>
+	<SFML/Graphics.hpp>
+
+1608671633 source:d:\projet\cppgame\tetris\src\src\tetrismenu.cpp
+	"TetrisMenu.h"
 
