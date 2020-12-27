@@ -2,11 +2,14 @@
 #define TETRISGAME_H
 
 #include <SFML/Graphics.hpp>
+#include <../lib/UtilSFML.h>
 
 class TetrisGame{
   public:
     TetrisGame(sf::RenderWindow *window);
-    bool PlaySolo();  //La partie en solo (retourne si la fenetre a ete fermer
+    bool PlaySolo();                      //La partie en solo (retourne si la fenetre a ete fermer
+    bool PlayMultiServer(Server *server); //La partie en multi en mode serveur
+    bool PlayMultiClient(Client *client); //La partie en multi en mode client
 
   private:
     //CONST
@@ -39,7 +42,7 @@ class TetrisGame{
 
 
     //SFML VARIABLES
-    sf::RenderWindow *gameWindow;        //Ecran de jeux(pointeur)
+    sf::RenderWindow *gameWindow;       //Ecran de jeux(pointeur)
     sf::Texture backgroundTexture;      //Texture du fond de la partie
     sf::Texture tileTexture;            //Texture des case (18x18)
     sf::Sprite backgroundSprite;        //Sprite du fond
@@ -59,6 +62,7 @@ class TetrisGame{
     void FixPiece();  //On fixe la piece au plateau
     void UpdateDisplay(); //Mise a jour de l'affichage du terrain
     void Dash();  //On dash la piece
+    void UpdateDisplayMulti(int nbTotalPlayer,int nbAlivePlayer,int classement);  //Mise a jour de l'affichage du terrain en mode multi
 };
 
 #endif // TETRISGAME_H

@@ -69,10 +69,12 @@
 		<Unit filename="img/background.png" />
 		<Unit filename="img/tiles.png" />
 		<Unit filename="include/TetrisGame.h" />
+		<Unit filename="include/TetrisMenu.h" />
 		<Unit filename="lib/UtilSFML.cpp" />
 		<Unit filename="lib/UtilSFML.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="src/TetrisGame.cpp" />
+		<Unit filename="src/TetrisMenu.cpp" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>
